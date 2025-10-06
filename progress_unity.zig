@@ -83,25 +83,8 @@ fn plug_stop() callconv(.c) c_int {
 fn plug_message(id: u32, ctx: usize, p1: u32, p2: u32) callconv(.c) c_int {
     _ = .{ ctx, p2 };
 
-    const seek_events = .{
-        c.DB_EV_SEEK,
-    };
-    const playback_events = .{
-        c.DB_EV_NEXT,
-        c.DB_EV_PREV,
-        c.DB_EV_PLAY_CURRENT,
-        c.DB_EV_PLAY_NUM,
-        c.DB_EV_STOP,
-        c.DB_EV_PAUSE,
-        c.DB_EV_PLAY_RANDOM,
-    };
-    const queue_events = .{
-        c.DB_EV_TRACKINFOCHANGED,
-        c.DB_EV_PLAYLISTCHANGED,
-    };
-
-    inline for (seek_events) |ev| {
-        if (id == ev) {
+    switch (id) {
+        c.DB_EV_SEEK => {
             const get_position_max = struct {
                 inline fn f() f64 {
                     const it = deadbeef.streamer_get_playing_track.?() orelse return 0.0;
@@ -115,21 +98,22 @@ fn plug_message(id: u32, ctx: usize, p1: u32, p2: u32) callconv(.c) c_int {
                 .queue_size = deadbeef.playqueue_get_count.?(),
             };
             update_status(curr.progress, curr.queue_size);
-            return 0;
-        }
-    }
-    inline for (playback_events) |ev| {
-        if (id == ev) {
+        },
+        c.DB_EV_NEXT,
+        c.DB_EV_PREV,
+        c.DB_EV_PLAY_CURRENT,
+        c.DB_EV_PLAY_NUM,
+        c.DB_EV_STOP,
+        c.DB_EV_PAUSE,
+        c.DB_EV_PLAY_RANDOM,
+        => {
             const curr = .{
                 .progress = 0.0,
                 .queue_size = deadbeef.playqueue_get_count.?(),
             };
             update_status(curr.progress, curr.queue_size);
-            return 0;
-        }
-    }
-    inline for (queue_events) |ev| {
-        if (id == ev) {
+        },
+        c.DB_EV_TRACKINFOCHANGED, c.DB_EV_PLAYLISTCHANGED => {
             if (p1 == c.DDB_PLAYLIST_CHANGE_PLAYQUEUE) {
                 const curr = .{
                     .progress = deadbeef.playback_get_pos.?() / 100.0,
@@ -137,8 +121,8 @@ fn plug_message(id: u32, ctx: usize, p1: u32, p2: u32) callconv(.c) c_int {
                 };
                 update_status(curr.progress, curr.queue_size);
             }
-        }
-        return 0;
+        },
+        else => {},
     }
     return 0;
 }
