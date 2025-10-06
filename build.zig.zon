@@ -1,0 +1,18 @@
+// Copyright (C) 2025 Jakub Wasylków <kuba_160@protonmail.com>
+// SPDX-FileCopyrightText: 2025 Jakub Wasylków <kuba_160@protonmail.com>
+//
+// SPDX-License-Identifier: Zlib
+.{
+    .name = .ddb_progress_unity,
+    .version = "1.0.0",
+    .fingerprint = 0xd503383ac94474ef,
+    .minimum_zig_version = "0.15.1",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "dbus.zig",
+        "progress_unity.zig",
+        "tb_dbus.zig",
+    },
+}
