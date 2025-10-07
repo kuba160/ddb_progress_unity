@@ -1,6 +1,4 @@
-// Copyright (C) 2025 Jakub Wasylków <kuba_160@protonmail.com>
 // SPDX-FileCopyrightText: 2025 Jakub Wasylków <kuba_160@protonmail.com>
-//
 // SPDX-License-Identifier: Zlib
 const std = @import("std");
 const dbus = @import("dbus.zig");
