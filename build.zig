@@ -15,6 +15,7 @@ pub fn build(b: *std.Build) void {
         .pic = true,
         .link_libc = true,
     });
+    module.linkSystemLibrary("dbus-1", .{ .needed = true, .use_pkg_config = .yes });
 
     var plug = b.addLibrary(.{
         .name = "progress_unity",
@@ -22,7 +23,6 @@ pub fn build(b: *std.Build) void {
         .root_module = module,
     });
     plug.out_filename = "progress_unity.so";
-    plug.linkSystemLibrary("dbus-1");
 
     // wtf is this nesting...
     b.getInstallStep().dependOn(
