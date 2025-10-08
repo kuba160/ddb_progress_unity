@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Zlib
 const std = @import("std");
 const c = @cImport({
+    @cDefine("DDB_API_LEVEL", "11");
     @cInclude("deadbeef/deadbeef.h");
 });
 const dbus = @import("dbus.zig");
@@ -141,7 +142,7 @@ const settings_dlg = std.fmt.comptimePrint("property \"{s}\" checkbox {s} {d};\n
 var plugin: c.DB_misc_t = c.DB_misc_t{
     .plugin = c.DB_plugin_t{
         .api_vmajor = 1,
-        .api_vminor = 10,
+        .api_vminor = 11,
         .version_major = 1,
         .version_minor = 0,
         .type = c.DB_PLUGIN_MISC,
