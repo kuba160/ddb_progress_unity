@@ -10,15 +10,15 @@ Shows progressbar in taskbar using com.canonical.Unity.LauncherEntry. Written us
 
 Building in same directory (default output: `zig-out/lib/deadbeef/progress_unity.so`)
 
-```$ zig build```
+```$ zig build --release```
 
 You can use prefix `-p` to change output directory (but plugin will still be put in `$prefix/lib/deadbeef`). For example to install plugin locally on linux:
 
-```$ zig build -p ~/.local```
+```$ zig build --release -p ~/.local```
 
 Or globally:
 
-```# zig build -p /usr/local/lib``` or ```# zig build -p /usr/lib```
+```# zig build --release -p /usr/local/lib``` or ```# zig build --release -p /usr/lib```
 
 ## Testing
 

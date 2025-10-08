@@ -28,7 +28,7 @@ jobs:
     - name: Download DeaDBeeF header
       run: wget --quiet -nc https://raw.githubusercontent.com/DeaDBeeF-Player/deadbeef/1.8/deadbeef.h && mkdir -p ./static-deps/lib-x86-64/include/deadbeef && mv deadbeef.h ./static-deps/lib-x86-64/include/deadbeef
     - name: Build ddb_progress_unity
-      run: ./`basename ${ZIG_DOWNLOAD_URL} .tar.xz`/zig build --search-prefix static-deps/lib-x86-64 -Doptimize=ReleaseFast
+      run: ./`basename ${ZIG_DOWNLOAD_URL} .tar.xz`/zig build --search-prefix static-deps/lib-x86-64 --release
     - name: Upload artifact linux-x86_64.zip
       uses: actions/upload-artifact@v4
       if: ${{ !env.ACT }}
