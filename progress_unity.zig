@@ -23,7 +23,14 @@ inline fn update_status(progress: f64, queue_size: c_int) void {
         .name = E_NAME,
     };
 
-    const progress_visible = if (progress != 0.0) true else false;
+    const playback_state = deadbeef.get_output.?().*.state.?();
+    const hide_on_pause = deadbeef.conf_get_int.?("progress_unity.hide_on_pause", 0) != 0;
+    const progress_visible = switch (playback_state) {
+        c.DDB_PLAYBACK_STATE_PLAYING => if (progress != 0.0) true else false,
+        c.DDB_PLAYBACK_STATE_PAUSED => !hide_on_pause,
+        c.DDB_PLAYBACK_STATE_STOPPED => false,
+        else => unreachable,
+    };
     const count_visible = if (queue_size > 0) true else false;
 
     dbus.send_signal(conn, m, .{
@@ -113,9 +120,8 @@ fn plug_message(id: u32, ctx: usize, p1: u32, p2: u32) callconv(.c) c_int {
         },
         c.DB_EV_TRACKINFOCHANGED, c.DB_EV_PLAYLISTCHANGED => {
             if (p1 == c.DDB_PLAYLIST_CHANGE_PLAYQUEUE) {
-                const stopped = deadbeef.get_output.?().*.state.?() == c.DDB_PLAYBACK_STATE_STOPPED;
                 const curr = .{
-                    .progress = if (stopped) 0.0 else deadbeef.playback_get_pos.?() / 100.0,
+                    .progress = deadbeef.playback_get_pos.?() / 100.0,
                     .queue_size = deadbeef.playqueue_get_count.?(),
                 };
                 update_status(curr.progress, curr.queue_size);
@@ -125,6 +131,12 @@ fn plug_message(id: u32, ctx: usize, p1: u32, p2: u32) callconv(.c) c_int {
     }
     return 0;
 }
+
+const settings_dlg = std.fmt.comptimePrint("property \"{s}\" checkbox {s} {d};\n", .{
+    "Hide progress on pause",
+    "progress_unity.hide_on_pause",
+    0,
+});
 
 var plugin: c.DB_misc_t = c.DB_misc_t{
     .plugin = c.DB_plugin_t{
@@ -141,6 +153,7 @@ var plugin: c.DB_misc_t = c.DB_misc_t{
         .start = plug_start,
         .stop = plug_stop,
         .message = plug_message,
+        .configdialog = settings_dlg,
     },
 };
 
