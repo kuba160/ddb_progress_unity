@@ -1,5 +1,4 @@
 // SPDX-FileCopyrightText: 2025 Jakub Wasylków <kuba_160@protonmail.com>
-//
 // SPDX-License-Identifier: Zlib
 const std = @import("std");
 const c = @cImport({
@@ -17,7 +16,7 @@ var conn: dbus.dbus_connection = undefined;
 var tid: isize = undefined;
 var shutdown = false;
 
-fn update_status(progress: f64, queue_size: c_int) void {
+inline fn update_status(progress: f64, queue_size: c_int) void {
     const m = dbus.signal{
         .path = E_BUS_NAME,
         .iface = E_INTERFACE,
@@ -114,8 +113,9 @@ fn plug_message(id: u32, ctx: usize, p1: u32, p2: u32) callconv(.c) c_int {
         },
         c.DB_EV_TRACKINFOCHANGED, c.DB_EV_PLAYLISTCHANGED => {
             if (p1 == c.DDB_PLAYLIST_CHANGE_PLAYQUEUE) {
+                const stopped = deadbeef.get_output.?().*.state.?() == c.DDB_PLAYBACK_STATE_STOPPED;
                 const curr = .{
-                    .progress = deadbeef.playback_get_pos.?() / 100.0,
+                    .progress = if (stopped) 0.0 else deadbeef.playback_get_pos.?() / 100.0,
                     .queue_size = deadbeef.playqueue_get_count.?(),
                 };
                 update_status(curr.progress, curr.queue_size);
