@@ -1,7 +1,5 @@
-// Copyright (C) 2025 Jakub Wasylków <kuba_160@protonmail.com>
 // SPDX-FileCopyrightText: 2025 Jakub Wasylków <kuba_160@protonmail.com>
-//
-// SPDX-License-Identifier: Zlib
+// SPDX-License-Identifier: CC0-1.0
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
