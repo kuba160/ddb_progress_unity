@@ -4,7 +4,9 @@ SPDX-License-Identifier: CC0-1.0
 -->
 # ddb_progress_unity
 
-Shows progressbar in taskbar using com.canonical.Unity.LauncherEntry. Written using `zig` and `dbus-1`.
+Shows progressbar and number of enqueued songs in taskbar using `com.canonical.Unity.LauncherEntry`. Written using `zig` and `dbus-1`. Ensure your DE supports this extension before using. Result using KDE Plasma 6.4.5:
+
+<img width="259" height="62" alt="image" src="https://github.com/user-attachments/assets/9aea80c9-6a6d-4797-9fd6-28ae52afc30b" />
 
 ## Building
 
