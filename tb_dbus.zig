@@ -1,87 +1,248 @@
 // SPDX-FileCopyrightText: 2025 Jakub Wasylków <kuba_160@protonmail.com>
 // SPDX-License-Identifier: Zlib
 const std = @import("std");
-const dbus = @import("dbus.zig");
+const zd = @import("dbus.zig");
 
-const signal = dbus.signal{
+const sig = .{
     .path = "/test/signal/Object",
     .iface = "test.signal.Type",
     .name = "Signal",
 };
 
+const met = .{
+    .dest = "",
+    .path = "/",
+    .iface = "org.freedesktop.DBus.Peer",
+    .method = "Ping",
+};
+
 test "session bus connection test" {
-    const conn = try dbus.bus_get(dbus.bus_type.session);
-    defer dbus.bus_unref(conn);
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
 }
 
 test "system bus connection test" {
-    const conn = try dbus.bus_get(dbus.bus_type.system);
-    defer dbus.bus_unref(conn);
+    const conn = try zd.dbus_connection.init(.system);
+    defer conn.deinit();
 }
 
 test "starter bus connection test" {
-    const conn = try dbus.bus_get(dbus.bus_type.starter);
-    defer dbus.bus_unref(conn);
+    const conn = try zd.dbus_connection.init(.starter);
+    defer conn.deinit();
 }
 
-test "simple signal test" {
-    const conn = try dbus.bus_get(.starter);
-    defer dbus.bus_unref(conn);
-
-    try dbus.send_signal(conn, signal, .{
-        @as(u32, 1337),
-    });
+test "method call test" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_method_call(met.dest, met.path, met.iface, "InvalidMethod");
+        try msg.append("s", .{
+            "method_test",
+        });
+        try msg.send(conn);
+    }
 }
 
-test "type signal test" {
-    const conn = try dbus.bus_get(.starter);
-    defer dbus.bus_unref(conn);
-
-    try dbus.send_signal(conn, signal, .{
-        @as(u8, 255),
-        @as(u16, 1337),
-        @as(u32, 1337),
-        @as(u64, 1337),
-        @as(i16, -1337),
-        @as(i32, -1337),
-        @as(i64, -1337),
-        @as(f64, 1.337),
-        @as(bool, false),
-        @as(bool, true),
-    });
+test "valid int msg signal" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("ybnqiuxt", .{
+            255,
+            true,
+            -255,
+            255,
+            -255,
+            255,
+            -255,
+            255,
+        });
+        try msg.send(conn);
+    }
 }
 
-test "array signal test" {
-    const conn = try dbus.bus_get(.starter);
-    defer dbus.bus_unref(conn);
-
-    try dbus.send_signal(conn, signal, .{
-        [_]u8{ 1, 2, 3, 4 },
-        [_]u16{ 1, 2, 3, 4 },
-        [_]u32{ 1, 2, 3, 4 },
-        [_]u64{ 1, 2, 3, 4 },
-        [_]i16{ 1, 2, 3, 4 },
-        [_]i32{ 1, 2, 3, 4 },
-        [_]i64{ 1, 2, 3, 4 },
-        [_]f64{ 0.1, 0.2, 0.3, 0.4 },
-        [_]bool{ false, true },
-    });
+test "simple variant msg signal" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("v", .{
+            .{ "y", 255 },
+        });
+        try msg.send(conn);
+    }
 }
 
-test "sv map test" {
-    const conn = try dbus.bus_get(.starter);
-    defer dbus.bus_unref(conn);
-
-    try dbus.send_signal(conn, signal, .{.{
-        .n0 = @as(u8, 255),
-        .n1 = @as(u16, 1337),
-        .n2 = @as(u32, 1337),
-        .n3 = @as(u64, 1337),
-        .n4 = @as(i16, -1337),
-        .n5 = @as(i32, -1337),
-        .n6 = @as(i64, -1337),
-        .n7 = @as(f64, 1.337),
-        .n8 = @as(bool, false),
-        .n9 = @as(bool, true),
-    }});
+test "simple type msg signal" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("u", .{
+            23,
+        });
+        try msg.append("u", .{
+            24,
+        });
+        try msg.send(conn);
+    }
 }
+
+test "nested array msg signal" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("aau", .{
+            .{
+                .{ 1, 2, 3 },
+                .{ 4, 5, 6 },
+            },
+        });
+        try msg.send(conn);
+    }
+}
+
+test "basic types msg signal" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("ybnqiuxtds", .{
+            255,
+            true,
+            -255,
+            255,
+            -255,
+            255,
+            -255,
+            255,
+            1.0,
+            "test",
+        });
+        try msg.send(conn);
+    }
+}
+
+test "variant msg" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("v", .{
+            .{ "u", 32 },
+        });
+        try msg.send(conn);
+    }
+}
+
+test "double sequential array msg" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("asau", .{
+            .{ "1", "2" },
+            .{ 1, 2 },
+        });
+        try msg.send(conn);
+    }
+}
+
+test "array in variant msg" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("v", .{
+            .{ "as", .{ "one", "two" } },
+        });
+        try msg.send(conn);
+    }
+}
+
+test "array of variants msg" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("av", .{
+            .{
+                .{ "as", .{ "one", "two" } },
+                .{ "u", 32 },
+            },
+        });
+        try msg.send(conn);
+    }
+}
+
+test "struct msg" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("(sub)", .{
+            .{
+                "one",
+                256,
+                true,
+            },
+        });
+        try msg.send(conn);
+    }
+}
+
+test "dict msg" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("a{sv}", .{
+            .{
+                .{ "key", .{ "s", "value" } },
+                .{ "has_key", .{ "b", true } },
+            },
+        });
+        try msg.send(conn);
+    }
+}
+
+test "object msg" {
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("ao", .{
+            .{
+                "/",
+                sig.path,
+            },
+        });
+        try msg.send(conn);
+    }
+}
+
+test "custom object msg" {
+    const timestamp = struct {
+        epoch: i64,
+        pub fn current() @This() {
+            return .{ .epoch = std.time.timestamp() };
+        }
+        pub fn dbus_append(self: @This(), iter: *zd.dbus_iter) zd.dbus_error!void {
+            try iter.append("x", .{self.epoch});
+        }
+    };
+
+    const conn = try zd.dbus_connection.init(.session);
+    defer conn.deinit();
+    {
+        const msg = try zd.dbus_message.init_signal(sig.path, sig.iface, sig.name);
+        try msg.append("f", .{
+            timestamp.current(),
+        });
+        try msg.send(conn);
+    }
+}
+
+// monitor: dbus-monitor --session path='/test/signal/Object'

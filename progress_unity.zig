@@ -18,12 +18,6 @@ var tid: isize = undefined;
 var shutdown = false;
 
 inline fn update_status(progress: f64, queue_size: c_int) void {
-    const m = dbus.signal{
-        .path = E_BUS_NAME,
-        .iface = E_INTERFACE,
-        .name = E_NAME,
-    };
-
     const playback_state = deadbeef.get_output.?().*.state.?();
     const hide_on_pause = deadbeef.conf_get_int.?("progress_unity.hide_on_pause", 0) != 0;
     const progress_visible = switch (playback_state) {
@@ -34,16 +28,24 @@ inline fn update_status(progress: f64, queue_size: c_int) void {
     };
     const count_visible = if (queue_size > 0) true else false;
 
-    dbus.send_signal(conn, m, .{
-        E_APP,
-        .{
-            .@"progress-visible" = progress_visible,
-            .progress = progress,
-            .count = @as(i64, queue_size),
-            .@"count-visible" = count_visible,
+    const msg = dbus.dbus_message.init_signal(E_BUS_NAME, E_INTERFACE, E_NAME) catch {
+        deadbeef.log.?("progress_unity: dbus_message.init_signal failed\n");
+        return;
+    };
+
+    msg.append("sa{sv}", .{
+        E_APP, .{
+            .{ "progress-visible", .{ "b", progress_visible } },
+            .{ "count-visible", .{ "b", count_visible } },
+            .{ "progress", .{ "d", progress } },
+            .{ "count", .{ "x", queue_size } },
         },
     }) catch {
-        deadbeef.log.?("progress_unity: dbus message send failed: %s\n", dbus.error_get_msg());
+        deadbeef.log.?("progress_unity: dbus_message.append failed\n");
+    };
+
+    msg.send(conn) catch {
+        deadbeef.log.?("progress_unity: dbus_message.send_signal failed\n");
     };
 }
 
@@ -71,8 +73,8 @@ pub fn thread_loop(userdata: ?*anyopaque) callconv(.c) void {
 }
 
 fn plug_start() callconv(.c) c_int {
-    conn = dbus.bus_get(.session) catch {
-        deadbeef.log.?("progress_unity: dbus connection failed: %s\n", dbus.error_get_msg());
+    conn = dbus.dbus_connection.init(.session) catch {
+        deadbeef.log.?("progress_unity: dbus connection failed\n");
         return 1;
     };
     tid = deadbeef.thread_start.?(thread_loop, null);
@@ -81,7 +83,7 @@ fn plug_start() callconv(.c) c_int {
 
 fn plug_stop() callconv(.c) c_int {
     shutdown = true;
-    dbus.bus_unref(conn);
+    conn.deinit();
     //_ = deadbeef.thread_join.?(tid);
     return 0;
 }
