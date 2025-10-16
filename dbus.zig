@@ -194,10 +194,10 @@ pub const dbus_iter = struct {
         _ = self;
     }
 
-    pub fn init_open_container(parent: *dbus_iter, c_type: dbus_type, comptime fmt: []const u8) dbus_error!@This() {
+    pub fn init_open_container(parent: *dbus_iter, c_type: dbus_type, comptime fmt: ?[]const u8) dbus_error!@This() {
         var iter: c.DBusMessageIter = undefined;
 
-        const t = if (fmt.len == 0) null else fmt[0..];
+        const t = if (fmt == null) null else fmt.?[0..];
         const success = c.dbus_message_iter_open_container(&parent.iter, @intFromEnum(c_type), t, &iter);
         if (success == 0) return dbus_error.AllocationFailed;
         return .{ .iter = iter };
@@ -209,7 +209,7 @@ pub const dbus_iter = struct {
     pub inline fn is_valid_object_path(path: []const u8) bool {
         if (path.len == 0) return false;
         if (path[0] != '/') return false;
-        if (path[path.len - 1] == '/') return false;
+        if (path.len != 1 and path[path.len - 1] == '/') return false;
         for (path) |char| {
             switch (char) {
                 'A'...'Z', 'a'...'z', '0'...'9', '_', '/' => {},
@@ -333,7 +333,7 @@ pub const dbus_iter = struct {
     }
 
     pub inline fn append_dict_entry(self: *@This(), comptime fmt: []const u8, args: anytype) dbus_error!void {
-        var iter = try dbus_iter.init_open_container(self, .DICT_ENTRY, "");
+        var iter = try dbus_iter.init_open_container(self, .DICT_ENTRY, null);
         defer iter.deinit_container(self);
 
         if (args.len != 2) {
@@ -373,7 +373,7 @@ pub const dbus_iter = struct {
             .DOUBLE => try f.append_basic(root, .DOUBLE, &@as(f64, arg)),
             .STRING => try f.append_basic(root, .STRING, &@as([]const u8, arg)),
             .OBJECT_PATH => if (is_valid_object_path(arg)) {
-                try f.append_basic(root, .STRING, &@as([]const u8, arg));
+                try f.append_basic(root, .OBJECT_PATH, &@as([]const u8, arg));
             } else {
                 return dbus_error.ParseFailed;
             },

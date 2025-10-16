@@ -17,7 +17,7 @@ var conn: dbus.dbus_connection = undefined;
 var tid: isize = undefined;
 var shutdown = false;
 
-inline fn update_status(progress: f64, queue_size: c_int) void {
+fn update_status(progress: f64, queue_size: c_int) void {
     const playback_state = deadbeef.get_output.?().*.state.?();
     const hide_on_pause = deadbeef.conf_get_int.?("progress_unity.hide_on_pause", 0) != 0;
     const progress_visible = switch (playback_state) {

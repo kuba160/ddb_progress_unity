@@ -24,11 +24,12 @@ jobs:
     - name: Download Zig 0.15.1
       run: wget --quiet -nc ${ZIG_DOWNLOAD_URL} && tar -xf `basename ${ZIG_DOWNLOAD_URL}`
     - name: Download static deps
+      if: ${{ !env.ACT }}
       run: mkdir -p temp static-deps && curl -s -L http://sourceforge.net/projects/deadbeef/files/staticdeps/ddb-static-deps-latest.tar.bz2/download -o temp/ddb-static-deps.tar.bz2 && tar jxf temp/ddb-static-deps.tar.bz2 -C static-deps
     - name: Download DeaDBeeF header
       run: wget --quiet -nc https://raw.githubusercontent.com/DeaDBeeF-Player/deadbeef/1.8/deadbeef.h && mkdir -p ./static-deps/lib-x86-64/include/deadbeef && mv deadbeef.h ./static-deps/lib-x86-64/include/deadbeef
     - name: Build ddb_progress_unity
-      run: ./`basename ${ZIG_DOWNLOAD_URL} .tar.xz`/zig build --search-prefix static-deps/lib-x86-64 --release
+      run: ./`basename ${ZIG_DOWNLOAD_URL} .tar.xz`/zig build --search-prefix static-deps/lib-x86-64 --release -Dstatic-dbus -Dtarget=x86_64-linux-gnu.2.3
     - name: Upload artifact linux-x86_64.zip
       uses: actions/upload-artifact@v4
       if: ${{ !env.ACT }}
