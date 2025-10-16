@@ -6,7 +6,7 @@ name: ddb_progress_unity plugin build
 on: [push,pull_request]
 
 env:
-  ZIG_DOWNLOAD_URL: https://ziglang.org/download/0.15.1/zig-x86_64-linux-0.15.1.tar.xz
+  ZIG_DOWNLOAD_URL: https://ziglang.org/download/0.15.2/zig-x86_64-linux-0.15.2.tar.xz
   PKG_CONFIG_PATH: ./static-deps/lib-x86-64/lib/pkgconfig
   PKG_CONFIG_DBUS_1_PREFIX: static-deps/lib-x86-64
 
@@ -21,7 +21,7 @@ jobs:
       uses: actions/checkout@v1
     - name: Install packages
       run: apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq curl pkg-config wget xz-utils
-    - name: Download Zig 0.15.1
+    - name: Download Zig
       run: wget --quiet -nc ${ZIG_DOWNLOAD_URL} && tar -xf `basename ${ZIG_DOWNLOAD_URL}`
     - name: Download static deps
       if: ${{ !env.ACT }}
