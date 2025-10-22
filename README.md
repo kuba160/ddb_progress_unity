@@ -22,6 +22,14 @@ Or globally:
 
 ```# zig build --release -p /usr/local/lib``` or ```# zig build --release -p /usr/lib```
 
+### Additional build Configuration
+
+| Option            | Default value: type | Description                                              |
+|-------------------|---------------------|----------------------------------------------------------|
+| `-Dstatic-dbus`   | `false: bool`       | Prefer linking statically with `dbus-1`                  |
+| `-Dglibc-version` | `undefined: string` | Override glibc target (alternative for using `-Dtarget`) |
+| `-Dlink-libc`     | `true: bool`        | Experimental: disable linking with libc                  |
+
 ## Testing
 
 To run tests:
