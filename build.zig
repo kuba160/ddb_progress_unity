@@ -62,8 +62,11 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .link_libc = true,
     });
-
-    test_module.linkSystemLibrary("dbus-1", .{});
+    test_module.linkSystemLibrary("dbus-1", .{
+        .needed = true,
+        .use_pkg_config = .yes,
+        .preferred_link_mode = if (static_libdbus) .static else .dynamic,
+    });
 
     const unit_tests = b.addTest(.{
         .root_module = test_module,
