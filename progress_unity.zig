@@ -78,13 +78,16 @@ fn plug_start() callconv(.c) c_int {
         return 1;
     };
     tid = deadbeef.thread_start.?(thread_loop, null);
+    if (tid == 0) {
+        return 1;
+    }
+    _ = deadbeef.thread_detach.?(tid);
     return 0;
 }
 
 fn plug_stop() callconv(.c) c_int {
     shutdown = true;
     conn.deinit();
-    //_ = deadbeef.thread_join.?(tid);
     return 0;
 }
 
@@ -146,7 +149,7 @@ var plugin: c.DB_misc_t = c.DB_misc_t{
         .api_vmajor = 1,
         .api_vminor = 11,
         .version_major = 1,
-        .version_minor = 0,
+        .version_minor = 1,
         .type = c.DB_PLUGIN_MISC,
         .id = "progress_unity",
         .name = "Progressbar in taskbar (Unity.LauncherEntry)",
