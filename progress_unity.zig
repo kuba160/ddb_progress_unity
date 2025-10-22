@@ -56,10 +56,7 @@ pub fn thread_loop(userdata: ?*anyopaque) callconv(.c) void {
         queue_size: c_int = 0,
     };
     var prev = vars{};
-    while (true) {
-        if (shutdown) {
-            break;
-        }
+    while (!shutdown) {
         const curr = vars{
             .progress = deadbeef.playback_get_pos.?() / 100.0,
             .queue_size = deadbeef.playqueue_get_count.?(),
