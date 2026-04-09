@@ -18,17 +18,24 @@ You can use prefix `-p` to change output directory (but plugin will still be put
 
 ```$ zig build --release -p ~/.local```
 
-Or globally:
+Deadbeef header file is not included. If it cannot be located in your filesystem you can add additional search path using `--search-prefix`:
 
-```# zig build --release -p /usr/local/lib``` or ```# zig build --release -p /usr/lib```
+```
+$  find ./deadbeef -type f
+./deadbeef/include/deadbeef/deadbeef.h
+$ zig build --search-prefix ./deadbeef
+```
+
+With `zig` you can target a specific arch and libc (including specific glibc version) as long as you also have compatible dependencies. As an example let's try to compile this plugin for aarch64 using static-deps provided by deadbeef. The target will be `aarch64-linux-gnu.2.17`. Static deps will be placed in `static-deps` leading to this dbus path: `static-deps/lib-aarch64/lib/libdbus-1.a`. Since deadbeef provides both static and shared dbus you can also choose preferred linking mode.
+
+```$ zig build --search-prefix ./deadbeef -Dtarget=aarch64-linux-gnu.2.17 --search-prefix ./static-deps/lib-aarch64/```
 
 ### Additional build Configuration
 
-| Option            | Default value: type | Description                                              |
-|-------------------|---------------------|----------------------------------------------------------|
-| `-Dstatic-dbus`   | `false: bool`       | Prefer linking statically with `dbus-1`                  |
-| `-Dglibc-version` | `undefined: string` | Override glibc target (alternative for using `-Dtarget`) |
-| `-Dlink-libc`     | `true: bool`        | Experimental: disable linking with libc                  |
+| Option                  | Default value: type              | Description                             |
+|-------------------------|----------------------------------|-----------------------------------------|
+| `-Dpreferred_link_mode` | `.dynamic: std.builtin.LinkMode` | Preferred link mode                     |
+| `-Dlink_libc`           | `true: bool`                     | Experimental: disable linking with libc |
 
 ## Testing
 

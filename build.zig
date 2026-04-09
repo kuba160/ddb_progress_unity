@@ -3,19 +3,10 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
-    const static_libdbus = b.option(bool, "static-dbus", "Attempt to use static link for dbus-1 ") orelse false;
-    const glibc_version = b.option([]const u8, "glibc-version", "Attempt to use specific glibc version");
-    const link_libc = b.option(bool, "link-libc", "link libc") orelse true;
+    const preferred_link_mode = b.option(std.builtin.LinkMode, "preferred_link_mode", "Preferred link mode (default: dynamic)") orelse .dynamic;
+    const link_libc = b.option(bool, "link_libc", "link libc") orelse true;
 
-    const target = if (glibc_version) |semver_str| blk: {
-        const semver = std.SemanticVersion.parse(semver_str) catch {
-            std.debug.print("Parameter to glibc_version invalid: {s}\n", .{semver_str});
-            std.process.exit(2);
-        };
-        var customized = b.standardTargetOptions(.{});
-        customized.query.glibc_version = semver;
-        break :blk customized;
-    } else b.standardTargetOptions(.{});
+    const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{ .preferred_optimize_mode = .ReleaseFast });
 
     const module = b.createModule(.{
@@ -30,7 +21,7 @@ pub fn build(b: *std.Build) void {
     module.linkSystemLibrary("dbus-1", .{
         .needed = true,
         .use_pkg_config = .yes,
-        .preferred_link_mode = if (static_libdbus) .static else .dynamic,
+        .preferred_link_mode = preferred_link_mode,
     });
 
     var plug = b.addLibrary(.{
@@ -38,7 +29,7 @@ pub fn build(b: *std.Build) void {
         .linkage = .dynamic,
         .root_module = module,
     });
-    plug.out_filename = "progress_unity.so";
+    plug.out_filename = b.fmt("{s}{s}", .{ plug.name, target.result.dynamicLibSuffix() });
 
     // wtf is this nesting...
     b.getInstallStep().dependOn(
@@ -65,7 +56,7 @@ pub fn build(b: *std.Build) void {
     test_module.linkSystemLibrary("dbus-1", .{
         .needed = true,
         .use_pkg_config = .yes,
-        .preferred_link_mode = if (static_libdbus) .static else .dynamic,
+        .preferred_link_mode = preferred_link_mode,
     });
 
     const unit_tests = b.addTest(.{
