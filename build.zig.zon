@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2025 Jakub Wasylków <kuba_160@protonmail.com>
-// SPDX-License-Identifier: Zlib
+// SPDX-License-Identifier: CC0-1.0
 .{
     .name = .ddb_progress_unity,
     .version = "1.0.0",
