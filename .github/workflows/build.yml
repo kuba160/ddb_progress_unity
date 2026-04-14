@@ -5,10 +5,6 @@ name: ddb_progress_unity plugin build
 
 on: [push,pull_request]
 
-env:
-  PKG_CONFIG_PATH: ./static-deps/lib-x86-64/lib/pkgconfig
-  PKG_CONFIG_DBUS_1_PREFIX: static-deps/lib-x86-64
-
 jobs:
   build_linux:
     name: Linux
@@ -24,25 +20,44 @@ jobs:
       uses: mlugg/setup-zig@v2
       with:
         version: 0.16.0
-    - name: Download static deps
+    - name: Download static deps (x86_64)
       if: ${{ !env.ACT }}
       run: mkdir -p temp static-deps && curl -s -L http://sourceforge.net/projects/deadbeef/files/staticdeps/ddb-static-deps-latest.tar.bz2/download -o temp/ddb-static-deps.tar.bz2 && tar jxf temp/ddb-static-deps.tar.bz2 -C static-deps
+    - name: Download static deps (aarch64)
+      if: ${{ !env.ACT }}
+      run: curl -s -L https://sourceforge.net/projects/deadbeef/files/staticdeps/ddb-static-deps-aarch64-latest.tar.bz2/download -o temp/ddb-static-deps-aarch64-latest.tar.bz2 && tar jxf temp/ddb-static-deps-aarch64-latest.tar.bz2 -C static-deps
     - name: Download DeaDBeeF header
-      run: wget --quiet -nc https://raw.githubusercontent.com/DeaDBeeF-Player/deadbeef/1.8/deadbeef.h && mkdir -p ./static-deps/lib-x86-64/include/deadbeef && mv deadbeef.h ./static-deps/lib-x86-64/include/deadbeef
-    - name: Build ddb_progress_unity
-      run: zig build --search-prefix static-deps/lib-x86-64 --release -Dpreferred_link_mode=static -Dtarget=x86_64-linux-gnu.2.17
-    - name: Build ddb_progress_unity dbus_shared
-      run: zig build --search-prefix static-deps/lib-x86-64 --release -Dpreferred_link_mode=dynamic -Dtarget=x86_64-linux-gnu.2.17 -p zig-out-dynamic-dbus
+      run: wget --quiet -nc https://raw.githubusercontent.com/DeaDBeeF-Player/deadbeef/1.8/deadbeef.h && mkdir -p ./deadbeef/include/deadbeef && mv deadbeef.h ./deadbeef/include/deadbeef
+    - name: Build ddb_progress_unity (x86_64)
+      run: PKG_CONFIG_PATH="./static-deps/lib-x86-64/lib/pkgconfig" PKG_CONFIG_DBUS_1_PREFIX="static-deps/lib-x86-64" zig build --search-prefix deadbeef --search-prefix static-deps/lib-x86-64 --release -Dpreferred_link_mode=static -Dtarget=x86_64-linux-gnu.2.17 -p bin-x86_64
+    - name: Build ddb_progress_unity dbus_shared (x86_64)
+      run: PKG_CONFIG_PATH="./static-deps/lib-x86-64/lib/pkgconfig" PKG_CONFIG_DBUS_1_PREFIX="static-deps/lib-x86-64" zig build --search-prefix deadbeef --search-prefix static-deps/lib-x86-64 --release -Dpreferred_link_mode=dynamic -Dtarget=x86_64-linux-gnu.2.17 -p bin-x86_64-dynamic
+    - name: Build ddb_progress_unity (aarch64)
+      run: PKG_CONFIG_PATH="./static-deps/lib-aarch64/lib/pkgconfig" PKG_CONFIG_DBUS_1_PREFIX="static-deps/lib-aarch64" zig build --search-prefix deadbeef --search-prefix static-deps/lib-aarch64 --release -Dpreferred_link_mode=static -Dtarget=aarch64-linux-gnu.2.17 -p bin-aarch64
+    - name: Build ddb_progress_unity dbus_shared (aarch64)
+      run: PKG_CONFIG_PATH="./static-deps/lib-aarch64/lib/pkgconfig" PKG_CONFIG_DBUS_1_PREFIX="static-deps/lib-aarch64" zig build --search-prefix deadbeef --search-prefix static-deps/lib-aarch64 --release -Dpreferred_link_mode=dynamic -Dtarget=aarch64-linux-gnu.2.17 -p bin-aarch64-dynamic
 
     - name: Upload artifact linux-x86_64.zip
       uses: actions/upload-artifact@v4
       if: ${{ !env.ACT }}
       with:
         name: linux-x86_64
-        path: ./zig-out/lib/deadbeef/
-    - name: Upload artifact linux-x86_64-dynamic-dbus.zip
+        path: ./bin-x86_64/lib/deadbeef/
+    - name: Upload artifact linux-x86_64-dynamic.zip
       uses: actions/upload-artifact@v4
       if: ${{ !env.ACT }}
       with:
-        name: linux-x86_64-dynamic-dbus
-        path: ./zig-out-dynamic-dbus/lib/deadbeef/
+        name: linux-x86_64-dynamic
+        path: ./bin-x86_64-dynamic/lib/deadbeef/
+    - name: Upload artifact linux-aarch64.zip
+      uses: actions/upload-artifact@v4
+      if: ${{ !env.ACT }}
+      with:
+        name: linux-aarch64
+        path: ./bin-aarch64/lib/deadbeef/
+    - name: Upload artifact linux-aarch64-dynamic.zip
+      uses: actions/upload-artifact@v4
+      if: ${{ !env.ACT }}
+      with:
+        name: linux-aarch64-dynamic
+        path: ./bin-aarch64-dynamic/lib/deadbeef/
