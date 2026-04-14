@@ -65,7 +65,9 @@ pub fn thread_loop(userdata: ?*anyopaque) callconv(.c) void {
             update_status(curr.progress, curr.queue_size);
             prev = curr;
         }
-        std.Thread.sleep(1_000_000_000);
+        var threaded: std.Io.Threaded = .init_single_threaded;
+        const io = threaded.io();
+        io.sleep(.fromSeconds(1), .real) catch unreachable;
     }
 }
 

@@ -23,7 +23,7 @@ jobs:
     - name: Setup Zig
       uses: mlugg/setup-zig@v2
       with:
-        version: 0.15.2
+        version: 0.16.0
     - name: Download static deps
       if: ${{ !env.ACT }}
       run: mkdir -p temp static-deps && curl -s -L http://sourceforge.net/projects/deadbeef/files/staticdeps/ddb-static-deps-latest.tar.bz2/download -o temp/ddb-static-deps.tar.bz2 && tar jxf temp/ddb-static-deps.tar.bz2 -C static-deps
